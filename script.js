@@ -1,10 +1,10 @@
- // Get all needed DOM elements
-const form = document.getElementById('checkInForm');
-const nameInput = document.getElementById('attendeeName');
-const teamSelect = document.getElementById('teamSelect');
-const greetingEl = document.getElementById('greeting');
-const attendeeCountEl = document.getElementById('attendeeCount');
-const progressBar = document.getElementById('progressBar');
+// Get all needed DOM elements
+const form = document.getElementById("checkInForm");
+const nameInput = document.getElementById("attendeeName");
+const teamSelect = document.getElementById("teamSelect");
+const greetingEl = document.getElementById("greeting");
+const attendeeCountEl = document.getElementById("attendeeCount");
+const progressBar = document.getElementById("progressBar");
 
 // container for attendee list (will be created dynamically)
 let attendeeListEl;
@@ -17,14 +17,14 @@ const maxCount = 50;
 const teamCounts = {
   water: 0,
   zero: 0,
-  power: 0
+  power: 0,
 };
 
 // names for teams (matching select text)
 const teamNames = {
-  water: 'Team Water Wise',
-  zero: 'Team Net Zero',
-  power: 'Team Renewables'
+  water: "Team Water Wise",
+  zero: "Team Net Zero",
+  power: "Team Renewables",
 };
 
 // attendees list for display and storage
@@ -34,45 +34,48 @@ let attendees = [];
 function loadState() {
   ensureListContainer();
 
-  const storedCount = localStorage.getItem('attendanceCount');
+  const storedCount = localStorage.getItem("attendanceCount");
   if (storedCount !== null) {
     count = parseInt(storedCount, 10) || 0;
     attendeeCountEl.textContent = count;
-    progressBar.style.width = Math.round((count / maxCount) * 100) + '%';
+    progressBar.style.width = Math.round((count / maxCount) * 100) + "%";
   }
 
-  const storedTeam = localStorage.getItem('teamCounts');
+  const storedTeam = localStorage.getItem("teamCounts");
   if (storedTeam) {
     const obj = JSON.parse(storedTeam);
-    Object.keys(teamCounts).forEach(function(k) {
+    Object.keys(teamCounts).forEach(function (k) {
       teamCounts[k] = obj[k] || 0;
-      const el = document.getElementById(k + 'Count');
+      const el = document.getElementById(k + "Count");
       if (el) el.textContent = teamCounts[k];
     });
   }
 
-  const storedList = localStorage.getItem('attendees');
+  const storedList = localStorage.getItem("attendees");
   if (storedList) {
     attendees = JSON.parse(storedList);
   }
 
   renderAttendeeList();
+
+  // hide progress and border if no attendees
+  toggleBordersAndProgress();
 }
 
-document.addEventListener('DOMContentLoaded', loadState);
+document.addEventListener("DOMContentLoaded", loadState);
 
 // Utility functions for persistence and rendering
 function saveState() {
-  localStorage.setItem('attendanceCount', count);
-  localStorage.setItem('teamCounts', JSON.stringify(teamCounts));
-  localStorage.setItem('attendees', JSON.stringify(attendees));
+  localStorage.setItem("attendanceCount", count);
+  localStorage.setItem("teamCounts", JSON.stringify(teamCounts));
+  localStorage.setItem("attendees", JSON.stringify(attendees));
 }
 
 function renderAttendeeList() {
   if (!attendeeListEl) return;
-  attendeeListEl.innerHTML = '';
-  attendees.forEach(function(a) {
-    const li = document.createElement('li');
+  attendeeListEl.innerHTML = "";
+  attendees.forEach(function (a) {
+    const li = document.createElement("li");
     li.textContent = `${a.name} (${a.teamName})`;
     attendeeListEl.appendChild(li);
   });
@@ -80,21 +83,36 @@ function renderAttendeeList() {
 
 // Add an <ul> after the team grid to show attendee list
 function ensureListContainer() {
-  const teamStats = document.querySelector('.team-stats');
+  const teamStats = document.querySelector(".team-stats");
   if (!teamStats) return;
-  attendeeListEl = document.getElementById('attendeeList');
+  attendeeListEl = document.getElementById("attendeeList");
   if (!attendeeListEl) {
-    attendeeListEl = document.createElement('ul');
-    attendeeListEl.id = 'attendeeList';
-    attendeeListEl.style.listStyle = 'none';
-    attendeeListEl.style.marginTop = '20px';
-    attendeeListEl.style.padding = '0';
+    attendeeListEl = document.createElement("ul");
+    attendeeListEl.id = "attendeeList";
+    attendeeListEl.style.listStyle = "none";
+    attendeeListEl.style.marginTop = "20px";
+    attendeeListEl.style.padding = "0";
     teamStats.appendChild(attendeeListEl);
   }
 }
 
+// helper to show/hide progress container and team-stats border
+function toggleBordersAndProgress() {
+  const progressContainer = document.querySelector(".progress-container");
+  const teamStats = document.querySelector(".team-stats");
+  if (!progressContainer || !teamStats) return;
+
+  if (count > 0) {
+    progressContainer.style.display = "block";
+    teamStats.style.borderTop = "2px solid #f1f5f9";
+  } else {
+    progressContainer.style.display = "none";
+    teamStats.style.borderTop = "none";
+  }
+}
+
 // handle form submission
-form.addEventListener('submit', function(event) {
+form.addEventListener("submit", function (event) {
   event.preventDefault();
 
   const name = nameInput.value.trim();
@@ -111,7 +129,7 @@ form.addEventListener('submit', function(event) {
 
   // update individual team counter and internal state
   teamCounts[team] += 1;
-  const teamCounter = document.getElementById(team + 'Count');
+  const teamCounter = document.getElementById(team + "Count");
   teamCounter.textContent = teamCounts[team];
 
   // record attendee
@@ -120,13 +138,16 @@ form.addEventListener('submit', function(event) {
 
   // update progress bar width based on goal
   const percent = Math.round((count / maxCount) * 100);
-  progressBar.style.width = percent + '%';
+  progressBar.style.width = percent + "%";
+
+  // make progress container and border visible once someone checks in
+  toggleBordersAndProgress();
 
   // show a personalized greeting or celebration if goal reached
   if (count >= maxCount) {
     // determine winning team by highest count
-    let winningKey = 'water';
-    Object.keys(teamCounts).forEach(function(k) {
+    let winningKey = "water";
+    Object.keys(teamCounts).forEach(function (k) {
       if (teamCounts[k] > teamCounts[winningKey]) {
         winningKey = k;
       }
@@ -137,12 +158,12 @@ form.addEventListener('submit', function(event) {
     greetingEl.textContent = `Welcome ${name} from ${teamName}!`;
   }
 
-  greetingEl.classList.add('success-message');
-  greetingEl.style.display = 'block';
+  greetingEl.classList.add("success-message");
+  greetingEl.style.display = "block";
 
   // hide the greeting after a few seconds
-  setTimeout(function() {
-    greetingEl.style.display = 'none';
+  setTimeout(function () {
+    greetingEl.style.display = "none";
   }, 4000);
 
   // persist state
